@@ -1,14 +1,10 @@
 import React, { ElementType, forwardRef, RefAttributes, ComponentType } from 'react'
 
-type GetProps<E> =
-  E extends keyof JSX.IntrinsicElements
-    ? JSX.IntrinsicElements[E]
-    : E extends ComponentType<infer P> ? P : never
+type GetProps<E> = E extends keyof JSX.IntrinsicElements
+  ? JSX.IntrinsicElements[E] : E extends ComponentType<infer P> ? P : never
 
-type GetElement<E> =
-  E extends keyof JSX.IntrinsicElements
-    ? JSX.IntrinsicElements[E]
-    : E
+type GetElement<E> = E extends keyof JSX.IntrinsicElements
+  ? JSX.IntrinsicElements[E] : E
 
 type Types = keyof JSX.IntrinsicElements | ComponentType
 
@@ -27,9 +23,9 @@ const forwardComponent: forwardComponent = ( initial, render ) => {
 }
 
 namespace forwardComponent {
-  export type RenderEl<E extends Types, P> = Render<GetProps<E> & P, GetElement<E>>
-  export interface Render<P, C> {
-    ( props: P, Component: C, ref: React.ForwardedRef<any> ): React.ReactElement | null
+  export type RenderEl<E extends Types, P> = Render<GetProps<E> & P>
+  export interface Render<P> {
+    ( props: P, Component: ComponentType<any>, ref: React.ForwardedRef<any> ): React.ReactElement | null
   }
   export interface ForwardedComponentExoticComponent<E extends Types, P> {
     <A extends Types = E>(
@@ -40,5 +36,9 @@ namespace forwardComponent {
     displayName?: string
   }
 }
+
+forwardComponent( 'div', ( props, Component, ref ) => {
+  return <Component ref={ref} {...props}></Component>
+} )
 
 export default forwardComponent
