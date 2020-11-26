@@ -1,8 +1,8 @@
-import React, { ElementType, WeakValidationMap, forwardRef, RefAttributes, ComponentType, createContext, useContext, PropsWithChildren } from 'react'
+import React, { ElementType, WeakValidationMap, forwardRef, RefAttributes, ComponentType, createContext, useContext, useRef, useMemo, createRef } from 'react'
 
-import omit from './omit'
+import multipleRefs from './multipleRefs'
 
-const Context = createContext<forwardDynamicTag.Context>( { DefaultComponent: null } )
+const Context = createContext<React.MutableRefObject<any>>( createRef() )
 
 type GetProps<E> =
   E extends keyof JSX.IntrinsicElements
@@ -16,7 +16,7 @@ type GetElement<E> =
 
 type Types = keyof JSX.IntrinsicElements | ComponentType
 
-const forwardDynamicTag = <E extends Types, P, T extends { [k: string]: any } = {}>(
+const forwardComponent = <E extends Types, P, T extends { [k: string]: any } = {}>(
   initial: E,
   getProps: ( props: GetProps<E> & P ) => GetProps<E> = props => props,
   RenderComponent: ComponentType<GetProps<E> & P> | null | undefined = null,
@@ -24,47 +24,40 @@ const forwardDynamicTag = <E extends Types, P, T extends { [k: string]: any } = 
 ) => {
   const component = forwardRef<any, any>( ( { as, ...props }, ref ) => {
 
-    const { DefaultComponent } = useContext( Context )
+    const internalRef = useRef( null )
 
-    const Component = as ?? DefaultComponent ?? initial
+    const reference = useMemo( () => {
+      multipleRefs( ref, internalRef )
+    }, [] )
+
+    const Component = as ?? initial
 
     const defProps = getProps( props as GetProps<E> & P )
 
     if ( RenderComponent )
       return (
-        <RenderComponent {...props}>
-          <Component {...defProps} ref={ref}/>
-        </RenderComponent>
+        <Context.Provider value={internalRef}>
+          <RenderComponent {...props}>
+            <Component {...defProps} ref={ref}/>
+          </RenderComponent>
+        </Context.Provider>
       )
 
-    return <Component
-      {...defProps}
-      ref={ref}/>
+    return (
+      <Context.Provider value={internalRef}>
+        <Component {...defProps} ref={reference} />
+      </Context.Provider>
+    )
 
-  } ) as any as forwardDynamicTag.DynamicTagExoticComponent<E, P>
+  } ) as any as forwardComponent.ForwardedComponentExoticComponent<E, P>
 
   return Object.assign( component, assing )
 }
 
-forwardDynamicTag.onlyFilterPropKeys = <E, P>( ...keys: ( keyof GetProps<E> & P )[] ) =>
-  ( props: GetProps<E> & P ) => omit( props, ...keys )
+forwardComponent.useForwardedComponentRef = () => useContext( Context )
 
-forwardDynamicTag.DefaultDynamicComponent = ( props: forwardDynamicTag.DefaultDynamicComponent ) => {
-  return (
-    <Context.Provider value={ { DefaultComponent: props.default } }>
-      {props.children}
-    </Context.Provider>
-  )
-}
-
-namespace forwardDynamicTag {
-  export interface DefaultDynamicComponent extends PropsWithChildren<{}> {
-    default: Types
-  }
-  export interface Context {
-    DefaultComponent?: Types | null
-  }
-  export interface DynamicTagExoticComponent<E extends Types, P> {
+namespace forwardComponent {
+  export interface ForwardedComponentExoticComponent<E extends Types, P> {
     <A extends Types = E>(
       props: ( GetProps<A> ) & P & { as?: A, ref?: RefAttributes<GetElement<A>> }
     ): React.ReactElement
@@ -74,4 +67,4 @@ namespace forwardDynamicTag {
   }
 }
 
-export default forwardDynamicTag
+export default forwardComponent
