@@ -1,0 +1,8 @@
+{
+  "extends": "@cookiex",
+  "rules": {
+    "consistent-return": "off",
+    "default-param-last": "off",
+    "no-await-in-loop": "off"
+  }
+}
