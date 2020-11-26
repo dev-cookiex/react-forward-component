@@ -1,8 +1,4 @@
-import React, { ElementType, WeakValidationMap, forwardRef, RefAttributes, ComponentType, createContext, useContext, useRef, useMemo, createRef } from 'react'
-
-import multipleRefs from './multipleRefs'
-
-const Context = createContext<React.MutableRefObject<any>>( createRef() )
+import React, { ElementType, forwardRef, RefAttributes, ComponentType } from 'react'
 
 type GetProps<E> =
   E extends keyof JSX.IntrinsicElements
@@ -16,53 +12,31 @@ type GetElement<E> =
 
 type Types = keyof JSX.IntrinsicElements | ComponentType
 
-const forwardComponent = <E extends Types, P, T extends { [k: string]: any } = {}>(
-  initial: E,
-  getProps: ( props: GetProps<E> & P ) => GetProps<E> = props => props,
-  RenderComponent: ComponentType<GetProps<E> & P> | null | undefined = null,
-  assing: T = {} as any
-) => {
-  const component = forwardRef<any, any>( ( { as, ...props }, ref ) => {
+type forwardComponent =
+  <E extends Types, P>(
+    initial: E,
+    render: forwardComponent.RenderEl<E, P>
+  ) => forwardComponent.ForwardedComponentExoticComponent<E, P>
 
-    const internalRef = useRef( null )
+const forwardComponent: forwardComponent = ( initial, render ) => {
+  return forwardRef<any, any>( ( { as, ...props }, ref ) => {
 
-    const reference = useMemo( () => {
-      multipleRefs( ref, internalRef )
-    }, [] )
+    return render( props, as ?? initial, ref )
 
-    const Component = as ?? initial
-
-    const defProps = getProps( props as GetProps<E> & P )
-
-    if ( RenderComponent )
-      return (
-        <Context.Provider value={internalRef}>
-          <RenderComponent {...props}>
-            <Component {...defProps} ref={ref}/>
-          </RenderComponent>
-        </Context.Provider>
-      )
-
-    return (
-      <Context.Provider value={internalRef}>
-        <Component {...defProps} ref={reference} />
-      </Context.Provider>
-    )
-
-  } ) as any as forwardComponent.ForwardedComponentExoticComponent<E, P>
-
-  return Object.assign( component, assing )
+  } ) as forwardComponent.ForwardedComponentExoticComponent<any, any>
 }
 
-forwardComponent.useForwardedComponentRef = () => useContext( Context )
-
 namespace forwardComponent {
+  export type RenderEl<E extends Types, P> = Render<GetProps<E> & P, GetElement<E>>
+  export interface Render<P, C> {
+    ( props: P, Component: C, ref: React.ForwardedRef<any> ): React.ReactElement | null
+  }
   export interface ForwardedComponentExoticComponent<E extends Types, P> {
     <A extends Types = E>(
       props: ( GetProps<A> ) & P & { as?: A, ref?: RefAttributes<GetElement<A>> }
     ): React.ReactElement
     defaultProps?: Partial<E extends ElementType<infer P> ? P : never>
-    propTypes?: WeakValidationMap<P>
+    propTypes?: React.WeakValidationMap<P>
     displayName?: string
   }
 }

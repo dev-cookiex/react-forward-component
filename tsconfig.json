@@ -12,7 +12,7 @@
     "preserveConstEnums": true,
     "resolveJsonModule": true,
 
-    "jsx": "react",
+    "jsx": "react-native",
 
     "typeRoots": [ "node_modules/@types", "src/typings" ],
 
