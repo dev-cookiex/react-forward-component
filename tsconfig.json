@@ -1,18 +1,24 @@
 {
   "compilerOptions": {
-    "incremental": true,
     "target": "ESNext",
     "module": "CommonJS",
-    "lib": [ "ESNext" ],
-    "strict": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
+
+    "lib": [ "ESNext", "DOM" ],
+
+    "moduleResolution": "Node",
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    "preserveConstEnums": true,
     "resolveJsonModule": true,
-    "baseUrl": ".",
-    "paths": {
-      "@src/*": [ "src/*" ],
-      "@src": [ "src/index" ]
-    }
-  }
+
+    "jsx": "react",
+
+    "typeRoots": [ "node_modules/@types", "src/typings" ],
+
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": true
+  },
+  "exclude": [ "dist" ]
 }
