@@ -29,16 +29,12 @@ namespace forwardComponent {
   }
   export interface ForwardedComponentExoticComponent<E extends Types, P> {
     <A extends Types = E>(
-      props: ( GetProps<A> ) & P & { as?: A, ref?: RefAttributes<GetElement<A>> }
+      props: ( Omit<GetProps<A>, keyof P> ) & P & { as?: A, ref?: RefAttributes<GetElement<A>> }
     ): React.ReactElement
     defaultProps?: Partial<E extends ElementType<infer P> ? P : never>
     propTypes?: React.WeakValidationMap<P>
     displayName?: string
   }
 }
-
-forwardComponent( 'div', ( props, Component, ref ) => {
-  return <Component ref={ref} {...props}></Component>
-} )
 
 export default forwardComponent
