@@ -27,10 +27,15 @@ namespace forwardComponent {
   export interface Render<P> {
     ( props: P, Component: ComponentType<any>, ref: React.ForwardedRef<any> ): React.ReactElement | null
   }
+
+  type DefaultProp<A extends Types> = { as?: A, ref?: RefAttributes<GetElement<A>> }
+
+  type Props<A extends Types, P> =
+    & Omit<GetProps<A>, keyof P>
+    & P
+    & DefaultProp<A>
   export interface ForwardedComponentExoticComponent<E extends Types, P> {
-    <A extends Types = E>(
-      props: ( Omit<GetProps<A>, keyof P> ) & P & { as?: A, ref?: RefAttributes<GetElement<A>> }
-    ): React.ReactElement
+    <A extends Types = E>( props: Props<A, P> ): React.ReactElement
     defaultProps?: Partial<E extends ElementType<infer P> ? P : never>
     propTypes?: React.WeakValidationMap<P>
     displayName?: string
