@@ -1,4 +1,4 @@
-import React, { ElementType, forwardRef, RefAttributes, ComponentType, ComponentClass, FunctionComponent, useMemo, LegacyRef } from 'react'
+import React, { ElementType, forwardRef, RefAttributes, ComponentType, ComponentClass, FunctionComponent, useCallback, useMemo, LegacyRef } from 'react'
 
 type GetProps<E> = E extends keyof JSX.IntrinsicElements
   ? JSX.IntrinsicElements[E]
@@ -43,24 +43,25 @@ const forwardComponent: forwardComponent = ( initial, render ) => {
         return division
       }, {
         under: {} as { [k: string]: any },
-        direct: {} as { [k: string]: any }
+        direct: {} as any,
       } )
     }, [ props ] )
 
-    return render( division.direct as any, division.under as any, as ?? initial, ref )
+    const Component = useMemo( () => as ?? initial, [ as ] )
+
+    const component = useCallback( ( props: any ) => {
+      return <Component {...props} {...division.under} ref={ref}/>
+    }, [ props, ref, division.under, Component ] )
+
+    return render( division.direct, component )
 
   } ) as forwardComponent.ForwardedComponentExoticComponent<any, any>
 }
 
 namespace forwardComponent {
-  export type RenderEl<E extends Types, P> = Render<E, GetProps<E> & P>
-  export interface Render<A extends Types, P> {
-    (
-      props: P,
-      underProps: GetProps<A>,
-      Component: ComponentType<any>,
-      ref: React.ForwardedRef<any>
-    ): React.ReactElement | null
+  export type RenderEl<E extends Types, P> = Render<GetProps<E> & P>
+  export interface Render<P> {
+    ( props: P, Component: ComponentType<any> ): React.ReactElement | null
   }
 
   type DefaultProps<A extends Types> = { as?: A } & RefAttributes<GetRef<A>>
