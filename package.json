@@ -28,5 +28,8 @@
   "author": "Tony <tony.js@zoho.eu>",
   "peerDependencies": {
     "react": "^17.0.1"
+  },
+  "dependencies": {
+    "@cookiex-react/use-refs": "^1.0.0"
   }
 }

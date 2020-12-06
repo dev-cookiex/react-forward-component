@@ -415,6 +415,11 @@
   resolved "https://registry.yarnpkg.com/@commitlint/types/-/types-11.0.0.tgz#719cf05fcc1abb6533610a2e0f5dd1e61eac14fe"
   integrity sha512-VoNqai1vR5anRF5Tuh/+SWDFk7xi7oMwHrHrbm1BprYXjB2RJsWLhUrStMssDxEl5lW/z3EUdg8RvH/IUBccSQ==
 
+"@cookiex-react/use-refs@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@cookiex-react/use-refs/-/use-refs-1.0.0.tgz#d225306078d46f50b7f973e654dcc2b4e50f0997"
+  integrity sha512-I35Kzpa33ImJSeul3f4dryWmvE9AIJ/lC14/x+s+C+fvKufVbGcKSZ/cVidXJ126QWTSOYWMVPA0cyV6HP8mUA==
+
 "@cookiex/eslint-config@^0.4.1":
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/@cookiex/eslint-config/-/eslint-config-0.4.1.tgz#444fe4d89b43bbe36bc847fae32c2444ceced7ff"

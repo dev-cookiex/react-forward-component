@@ -1,7 +1,8 @@
-import React, { useCallback, useMemo } from 'react'
+import useRefs from '@cookiex-react/use-refs'
+
+import React, { useCallback, useMemo, useRef } from 'react'
 
 import { createJumpProps, createRepassProps } from './tools'
-
 type Allow = React.ComponentType<any> | keyof JSX.IntrinsicElements
 
 type InternalProps<P> = { as?: Allow } & P
@@ -53,6 +54,11 @@ const forwardComponent = <P extends AnyObject>( render: forwardComponent.Render<
 
 forwardComponent.withRef = <P extends AnyObject>( render: forwardComponent.RenderWithRef<P> ) => {
   const component: InternalForwardRef = React.forwardRef<any, InternalProps<P>>( ( { as, ...props }, ref ) => {
+
+    const reference = useRef( null )
+
+    const references = useRefs( reference, ref )
+
     const ToCreate = useMemo( () => as ?? component.defaultComponent ?? 'div', [ as ] )
 
     const repassProps = useMemo( () => createRepassProps<P>( props ), [ props ] )
@@ -60,11 +66,11 @@ forwardComponent.withRef = <P extends AnyObject>( render: forwardComponent.Rende
     const jumpProps = useMemo( () => createJumpProps( props ), [ props ] )
 
     const Component = useCallback(
-      ( props: any ) => <ToCreate {...props} { ...jumpProps } ref={ref}/>,
+      ( props: any ) => <ToCreate {...props} { ...jumpProps } ref={references}/>,
       [ jumpProps ]
     )
 
-    return render( repassProps, Component, ref )
+    return render( repassProps, Component, reference )
   } )
 
   return component as forwardComponent.ForwardComponentExoticComponent<P>
@@ -110,7 +116,7 @@ namespace forwardComponent {
   }
 
   export interface RenderWithRef<P> {
-    ( props: P, Component: React.FC<any>, ref: React.Ref<any> ): JSX.Element 
+    ( props: P, Component: React.FC<any>, ref: React.MutableRefObject<any> ): JSX.Element 
   }
 }
 
