@@ -51,6 +51,25 @@ const forwardComponent = <P extends AnyObject>( render: forwardComponent.Render<
   return component as forwardComponent.ForwardComponentExoticComponent<P>
 }
 
+forwardComponent.withRef = <P extends AnyObject>( render: forwardComponent.RenderWithRef<P> ) => {
+  const component: InternalForwardRef = React.forwardRef<any, InternalProps<P>>( ( { as, ...props }, ref ) => {
+    const ToCreate = useMemo( () => as ?? component.defaultComponent ?? 'div', [ as ] )
+
+    const repassProps = useMemo( () => createRepassProps<P>( props ), [ props ] )
+
+    const jumpProps = useMemo( () => createJumpProps( props ), [ props ] )
+
+    const Component = useCallback(
+      ( props: any ) => <ToCreate {...props} { ...jumpProps } ref={ref}/>,
+      [ jumpProps ]
+    )
+
+    return render( repassProps, Component, ref )
+  } )
+
+  return component as forwardComponent.ForwardComponentExoticComponent<P>
+}
+
 interface ForwardComponentProps<T extends Allow> extends React.RefAttributes<GetComponentReference<T>> {
   as?: T
 }
@@ -88,6 +107,10 @@ namespace forwardComponent {
   }
   export interface Render<P> {
     ( props: P, Component: React.FC<any> ): JSX.Element
+  }
+
+  export interface RenderWithRef<P> {
+    ( props: P, Component: React.FC<any>, ref: React.Ref<any> ): JSX.Element 
   }
 }
 
