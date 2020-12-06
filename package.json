@@ -2,7 +2,7 @@
   "name": "@cookiex-react/forward-component",
   "version": "0.2.3",
   "description": "app-description",
-  "main": "dist/index.js",
+  "main": "dist/index.jsx",
   "license": "MIT",
   "scripts": {
     "test": "jest",
