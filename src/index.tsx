@@ -52,7 +52,7 @@ const forwardComponent = <P extends AnyObject>( render: forwardComponent.Render<
   return component as forwardComponent.ForwardComponentExoticComponent<P>
 }
 
-forwardComponent.withRef = <P extends AnyObject, R = undefined>( render: forwardComponent.RenderWithRef<P, R> ) => {
+forwardComponent.ref = <P extends AnyObject>( render: forwardComponent.RenderRef<P> ) => {
   const component: InternalForwardRef = React.forwardRef<any, InternalProps<P>>( ( { as, ...props }, ref ) => {
 
     const reference = useRef( null )
@@ -71,6 +71,30 @@ forwardComponent.withRef = <P extends AnyObject, R = undefined>( render: forward
     )
 
     return render( repassProps, Component, reference )
+  } )
+
+  return component as forwardComponent.ForwardComponentExoticComponent<P>
+}
+
+forwardComponent.imperative = <P extends AnyObject, R>(
+  render: forwardComponent.RenderImperativeRef<P, R>
+) => {
+  const component: InternalForwardRef = React.forwardRef<any, InternalProps<P>>( ( { as, ...props }, ref ) => {
+
+    const element = useRef( null )
+
+    const ToCreate = useMemo( () => as ?? component.defaultComponent ?? 'div', [ as ] )
+
+    const repassProps = useMemo( () => createRepassProps<P>( props ), [ props ] )
+
+    const jumpProps = useMemo( () => createJumpProps( props ), [ props ] )
+
+    const Component = useCallback(
+      ( props: any ) => <ToCreate {...props} { ...jumpProps } ref={element}/>,
+      [ jumpProps ]
+    )
+
+    return render( repassProps, Component, ref, element )
   } )
 
   return component as forwardComponent.ForwardComponentExoticComponent<P, R>
@@ -118,8 +142,17 @@ namespace forwardComponent {
     ( props: P, Component: React.FC<any> ): JSX.Element
   }
 
-  export interface RenderWithRef<P, R = undefined> {
-    ( props: P, Component: React.FC<any>, ref: React.MutableRefObject<R extends undefined ? any : R> ): JSX.Element 
+  export interface RenderRef<P> {
+    ( props: P, Component: React.FC<any>, ref: React.MutableRefObject<any> ): JSX.Element 
+  }
+
+  export interface RenderImperativeRef<P, R> {
+    (
+      props: P,
+      Component: React.FC<any>,
+      toAttach: React.ForwardedRef<R>,
+      fromComponent: React.MutableRefObject<any>
+    ): JSX.Element 
   }
 }
 
