@@ -52,7 +52,7 @@ const forwardComponent = <P extends AnyObject>( render: forwardComponent.Render<
   return component as forwardComponent.ForwardComponentExoticComponent<P>
 }
 
-forwardComponent.withRef = <P extends AnyObject>( render: forwardComponent.RenderWithRef<P> ) => {
+forwardComponent.withRef = <P extends AnyObject, R = undefined>( render: forwardComponent.RenderWithRef<P, R> ) => {
   const component: InternalForwardRef = React.forwardRef<any, InternalProps<P>>( ( { as, ...props }, ref ) => {
 
     const reference = useRef( null )
@@ -73,12 +73,12 @@ forwardComponent.withRef = <P extends AnyObject>( render: forwardComponent.Rende
     return render( repassProps, Component, reference )
   } )
 
-  return component as forwardComponent.ForwardComponentExoticComponent<P>
+  return component as forwardComponent.ForwardComponentExoticComponent<P, R>
 }
 
-interface ForwardComponentProps<T extends Allow> extends React.RefAttributes<GetComponentReference<T>> {
-  as?: T
-}
+interface ForwardComponentProps<T extends Allow, R = undefined>
+  extends React.RefAttributes<R extends undefined ? GetComponentReference<T> : R>
+    { as?: T }
 
 type RestPropertiesKeys<T extends Allow, P> =
   Exclude<
@@ -93,19 +93,20 @@ type RestProperties<T extends Allow, P> = {
   [K in RestPropertiesKeys<T, P> as `_${string & K}`]?: GetComponentProps<T>[K]
 }
 
-type NormalizeComponentProps<T extends Allow, P> =
-  Omit<GetComponentProps<T>, keyof ForwardComponentProps<T> | keyof P>
+type NormalizeComponentProps<T extends Allow, P, R = GetComponentReference<T>> =
+  Omit<GetComponentProps<T>, keyof ForwardComponentProps<T, R> | keyof P>
 
-type NormalizeNeutralProps<T extends Allow, P> = Omit<P, keyof ForwardComponentProps<T>>
+type NormalizeNeutralProps<T extends Allow, P, R = GetComponentReference<T>> =
+  Omit<P, keyof ForwardComponentProps<T, R>>
 
-type Props<T extends Allow, P> =
-  & ForwardComponentProps<T>
+type Props<T extends Allow, P, R = undefined> =
+  & ForwardComponentProps<T, R>
   & NormalizeComponentProps<T, P>
   & NormalizeNeutralProps<T, P>
   & RestProperties<T, P>
 namespace forwardComponent {
-  export interface ForwardComponentExoticComponent<P> {
-    <T extends Allow = 'div'>( props: Props<T, P> ): JSX.Element
+  export interface ForwardComponentExoticComponent<P, R = undefined> {
+    <T extends Allow = 'div'>( props: Props<T, P, R> ): JSX.Element
     defaultProps?: AnyObject
     propTypes?: React.WeakValidationMap<P>
     displayName?: string
@@ -115,8 +116,8 @@ namespace forwardComponent {
     ( props: P, Component: React.FC<any> ): JSX.Element
   }
 
-  export interface RenderWithRef<P> {
-    ( props: P, Component: React.FC<any>, ref: React.MutableRefObject<any> ): JSX.Element 
+  export interface RenderWithRef<P, R = undefined> {
+    ( props: P, Component: React.FC<any>, ref: React.MutableRefObject<R extends undefined ? any : R> ): JSX.Element 
   }
 }
 
