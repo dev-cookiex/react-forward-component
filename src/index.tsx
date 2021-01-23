@@ -105,7 +105,8 @@ type Props<T extends Allow, P, R = undefined> =
   & NormalizeNeutralProps<T, P>
   & RestProperties<T, P>
 namespace forwardComponent {
-  export type Properties<T extends Allow, P, R = undefined> = Props<T, P, R>
+  export type Elements = Allow
+  export type Properties<T extends Elements, P, R = undefined> = Props<T, P, R>
   export interface ForwardComponentExoticComponent<P, R = undefined> {
     <T extends Allow = 'div'>( props: Props<T, P, R> ): JSX.Element
     defaultProps?: AnyObject
