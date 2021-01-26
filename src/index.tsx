@@ -1,158 +1,38 @@
-import useRefs from '@cookiex-react/use-refs'
+import React, { ComponentType, forwardRef, RefAttributes } from 'react'
 
-import React, { useCallback, useMemo, useRef } from 'react'
+const forwardComponent = <P extends any, R = undefined, D extends forwardComponent.AnyElement = 'div'>(
+  render: forwardComponent.Render<P>,
+  defaultElement?: D
+): forwardComponent.ExoticComponent<P, R, D> =>
+  forwardRef<any, any>(
+    ( { as: Component = defaultElement, ...props }, ref ) => render( Component, props, ref )
+  ) as any
 
-import { createJumpProps, createRepassProps } from './tools'
-type Allow = React.ComponentType<any> | keyof JSX.IntrinsicElements
-
-type InternalProps<P> = { as?: Allow } & P
-
-type GetComponentReference<T> =
-  T extends keyof JSX.IntrinsicElements
-    ? JSX.IntrinsicElements[T]['ref'] extends React.LegacyRef<infer T>
-      ? T
-      : never
-    : T extends React.ComponentClass<any>
-      ? T
-      : T extends React.FunctionComponent<infer P>
-        ? P extends React.RefAttributes<infer T>
-          ? T
-          : never
-        : never
-
-type GetComponentProps<T> = 
-  T extends keyof JSX.IntrinsicElements
-    ? JSX.IntrinsicElements[T]
-    : T extends React.ComponentType<infer P>
-      ? P
-      : never
-
-type AnyObject = { [K in keyof any]: any }
-
-interface InternalForwardRef extends React.ForwardRefExoticComponent<any> {
-  defaultComponent?: Allow
-}
-
-const forwardComponent = <P extends AnyObject>( render: forwardComponent.Render<P> ) => {
-  const component: InternalForwardRef = React.forwardRef<any, InternalProps<P>>( ( { as, ...props }, ref ) => {
-    const ToCreate = useMemo( () => as ?? component.defaultComponent ?? 'div', [ as ] )
-
-    const repassProps = useMemo( () => createRepassProps<P>( props ), [ props ] )
-
-    const jumpProps = useMemo( () => createJumpProps( props ), [ props ] )
-
-    const Component = useCallback(
-      ( props: any ) => <ToCreate {...props} { ...jumpProps } ref={ref}/>,
-      [ jumpProps ]
-    )
-
-    return render( repassProps, Component )
-  } )
-
-  return component as forwardComponent.ForwardComponentExoticComponent<P>
-}
-
-forwardComponent.ref = <P extends AnyObject>( render: forwardComponent.RenderRef<P> ) => {
-  const component: InternalForwardRef = React.forwardRef<any, InternalProps<P>>( ( { as, ...props }, ref ) => {
-
-    const reference = useRef( null )
-
-    const references = useRefs( reference, ref )
-
-    const ToCreate = useMemo( () => as ?? component.defaultComponent ?? 'div', [ as ] )
-
-    const repassProps = useMemo( () => createRepassProps<P>( props ), [ props ] )
-
-    const jumpProps = useMemo( () => createJumpProps( props ), [ props ] )
-
-    const Component = useCallback(
-      ( props: any ) => <ToCreate {...props} { ...jumpProps } ref={references}/>,
-      [ jumpProps ]
-    )
-
-    return render( repassProps, Component, reference )
-  } )
-
-  return component as forwardComponent.ForwardComponentExoticComponent<P>
-}
-
-forwardComponent.imperative = <P extends AnyObject, R>(
-  render: forwardComponent.RenderImperativeRef<P, R>
-) => {
-  const component: InternalForwardRef = React.forwardRef<any, InternalProps<P>>( ( { as, ...props }, ref ) => {
-
-    const element = useRef( null )
-
-    const ToCreate = useMemo( () => as ?? component.defaultComponent ?? 'div', [ as ] )
-
-    const repassProps = useMemo( () => createRepassProps<P>( props ), [ props ] )
-
-    const jumpProps = useMemo( () => createJumpProps( props ), [ props ] )
-
-    const Component = useCallback(
-      ( props: any ) => <ToCreate {...props} { ...jumpProps } ref={element}/>,
-      [ jumpProps ]
-    )
-
-    return render( repassProps, Component, ref, element )
-  } )
-
-  return component as forwardComponent.ForwardComponentExoticComponent<P, R>
-}
-
-interface ForwardComponentProps<T extends Allow, R = undefined>
-  extends React.RefAttributes<R extends undefined ? GetComponentReference<T> : R>
-    { as?: T }
-
-type RestPropertiesKeys<T extends Allow, P> =
-  Exclude<
-    Extract<
-      keyof GetComponentProps<T>,
-      keyof P | 'as'
-    >,
-    'key' | 'ref'
-  >
-
-type RestProperties<T extends Allow, P> = {
-  [K in RestPropertiesKeys<T, P> as `_${string & K}`]?: GetComponentProps<T>[K]
-}
-
-type NormalizeComponentProps<T extends Allow, P, R = GetComponentReference<T>> =
-  Omit<GetComponentProps<T>, keyof ForwardComponentProps<T, R> | keyof P>
-
-type NormalizeNeutralProps<T extends Allow, P, R = GetComponentReference<T>> =
-  Omit<P, keyof ForwardComponentProps<T, R>>
-
-type Props<T extends Allow, P, R = undefined> =
-  & ForwardComponentProps<T, R>
-  & NormalizeComponentProps<T, P>
-  & NormalizeNeutralProps<T, P>
-  & RestProperties<T, P>
 namespace forwardComponent {
-  export type Elements = Allow
-  export type Properties<T extends Elements, P, R = undefined> = Props<T, P, R>
-  export interface ForwardComponentExoticComponent<P, R = undefined> {
-    <T extends Allow = 'div'>( props: Props<T, P, R> ): JSX.Element
-    defaultProps?: AnyObject
-    propTypes?: React.WeakValidationMap<P>
-    displayName?: string
-    defaultComponent?: Allow
-  }
-  export interface Render<P> {
-    ( props: P, Component: React.FC<any> ): JSX.Element
-  }
+  export type AnyProps = { [key: string]: any }
 
-  export interface RenderRef<P> {
-    ( props: P, Component: React.FC<any>, ref: React.MutableRefObject<any> ): JSX.Element 
-  }
+  export type Render<P extends AnyProps, R = any> =
+    ( Component: AnyElement, props: AnyProps & P, ref: React.Ref<R> ) => JSX.Element
 
-  export interface RenderImperativeRef<P, R> {
-    (
-      props: P,
-      Component: React.FC<any>,
-      toAttach: React.ForwardedRef<R>,
-      fromComponent: React.MutableRefObject<any>
-    ): JSX.Element 
+  export type AnyElement = ComponentType<any> | keyof JSX.IntrinsicElements
+
+  type GetAnyElementProp<E extends AnyElement> =
+    E extends ComponentType<infer P>
+      ? P
+      : E extends keyof JSX.IntrinsicElements
+       ? JSX.IntrinsicElements[E]
+       : {}
+
+  type AsProp<E extends AnyElement> = { as?: E }
+  type StandardProp<P, E extends AnyElement, R> = P & AsProp<E> & Ref<E, R>
+
+  type Ref<E extends AnyElement, R> = R extends undefined ? RefAttributes<E> : RefAttributes<R>
+
+  export type Props<P extends AnyProps, E extends AnyElement, R> =
+    Omit<GetAnyElementProp<E>, keyof StandardProp<P, E, R>> & StandardProp<P, E, R>
+
+  export interface ExoticComponent<P extends AnyProps, R, D extends AnyElement> {
+    <E extends AnyElement = D>( props: Props<P, E, R> ): JSX.Element
   }
 }
 
